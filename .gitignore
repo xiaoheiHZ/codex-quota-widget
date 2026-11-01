@@ -1,0 +1,15 @@
+**/bin/
+**/obj/
+release/
+tools/__pycache__/
+*.user
+.vs/
+.idea/
+.vscode/
+.env
+.env.*
+*.pfx
+*.p12
+*.key
+*.log
+*.tmp

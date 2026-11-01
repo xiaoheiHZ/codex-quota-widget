@@ -1,0 +1,144 @@
+<Window x:Class="CodexQuotaWidget.MainWindow"
+ xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+ xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+ xmlns:local="clr-namespace:CodexQuotaWidget"
+ Title="Codex 额度" Width="356" SizeToContent="Height"
+ WindowStyle="None" ResizeMode="NoResize" AllowsTransparency="True"
+ Background="Transparent" ShowInTaskbar="False" Topmost="True"
+ FontFamily="{StaticResource WidgetFont}" FontWeight="Medium" UseLayoutRounding="True"
+ TextOptions.TextFormattingMode="Display" TextOptions.TextRenderingMode="ClearType"
+ Loaded="WindowLoaded" Closing="WindowClosing" PreviewKeyDown="WindowKeyDown">
+ <Window.Resources>
+  <ContextMenu x:Key="WidgetMenu" x:Shared="False" FontFamily="{StaticResource WidgetFont}" FontWeight="Medium" Padding="4" Background="White" BorderBrush="#E7E7E7" HasDropShadow="True">
+   <MenuItem Header="显示组件" Tag="show" Click="ShowClick" Style="{StaticResource MenuItemStyle}" />
+   <MenuItem Header="刷新额度" Click="RefreshClick" Style="{StaticResource MenuItemStyle}" InputGestureText="F5" />
+   <Separator />
+   <MenuItem Header="展示样式" Style="{StaticResource MenuItemStyle}">
+    <MenuItem Header="经典面板" Tag="style:panel" IsCheckable="True" Click="StyleClick" Style="{StaticResource MenuItemStyle}" />
+    <MenuItem Header="横向状态条" Tag="style:strip" IsCheckable="True" Click="StyleClick" Style="{StaticResource MenuItemStyle}" />
+    <MenuItem Header="数字时钟" Tag="style:clock" IsCheckable="True" Click="StyleClick" Style="{StaticResource MenuItemStyle}" />
+    <MenuItem Header="迷你仪表" Tag="style:orbit" IsCheckable="True" Click="StyleClick" Style="{StaticResource MenuItemStyle}" />
+   </MenuItem>
+   <MenuItem Header="始终置顶" Tag="pin" IsCheckable="True" Click="PinClick" Style="{StaticResource MenuItemStyle}" />
+   <MenuItem Header="精简模式" Tag="compact" IsCheckable="True" Click="CompactClick" Style="{StaticResource MenuItemStyle}" />
+   <MenuItem Header="界面动效" Tag="motion" IsCheckable="True" Click="MotionClick" Style="{StaticResource MenuItemStyle}" />
+   <MenuItem Header="动效强度" Style="{StaticResource MenuItemStyle}">
+    <MenuItem Header="轻柔" Tag="motion:soft" IsCheckable="True" Click="MotionLevelClick" Style="{StaticResource MenuItemStyle}" />
+    <MenuItem Header="流畅" Tag="motion:fluid" IsCheckable="True" Click="MotionLevelClick" Style="{StaticResource MenuItemStyle}" />
+   </MenuItem>
+   <MenuItem Header="开机启动" Tag="startup" IsCheckable="True" Click="StartupClick" Style="{StaticResource MenuItemStyle}" />
+   <MenuItem Header="字体许可" Click="FontLicenseClick" Style="{StaticResource MenuItemStyle}" />
+   <Separator />
+   <MenuItem Header="隐藏到托盘" Click="HideClick" Style="{StaticResource MenuItemStyle}" />
+   <MenuItem Header="退出组件" Click="ExitClick" Style="{StaticResource MenuItemStyle}" />
+  </ContextMenu>
+ </Window.Resources>
+ <Grid x:Name="CardHost" Margin="12">
+ <Border x:Name="Card" CornerRadius="14" BorderThickness="1" BorderBrush="#E6E6E6" Background="White"
+   MouseLeftButtonDown="DragCard" MouseRightButtonUp="CardRightClick" MouseEnter="CardEnter" MouseLeave="CardLeave">
+  <Border.Effect><DropShadowEffect x:Name="CardShadow" BlurRadius="16" ShadowDepth="3" Color="#000000" Opacity="0.09" /></Border.Effect>
+  <Border.RenderTransform><TranslateTransform x:Name="EntranceTransform" /></Border.RenderTransform>
+  <StackPanel x:Name="ContentStack" Margin="19,15,19,11">
+   <Grid x:Name="Header" Background="Transparent" Height="29">
+    <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+     <Viewbox Width="20" Height="16" Margin="0,0,9,0"><Canvas Width="24" Height="19"><Path Stroke="#252525" StrokeThickness="2.2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Data="M3,4 L9,9.5 L3,15 M13,15 L21,15" /></Canvas></Viewbox>
+     <TextBlock Text="Codex" FontSize="16" FontWeight="Medium" VerticalAlignment="Center" />
+     <TextBlock x:Name="PlanLabel" Text="CODEX" FontSize="9" Foreground="#8A8A8A" Margin="9,3,0,0" VerticalAlignment="Center" />
+    </StackPanel>
+    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+     <Button x:Name="StyleButton" Style="{StaticResource IconButton}" Click="CycleStyleClick" ToolTip="切换展示样式 · Ctrl+Tab" AutomationProperties.Name="切换展示样式">
+      <Path Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" StrokeThickness="1.15" StrokeLineJoin="Round" Width="13" Height="13" Stretch="Uniform" Data="M1,1 L13,1 L13,13 L1,13 Z M1,5 L13,5 M6,5 L6,13" />
+     </Button>
+     <Button x:Name="PinButton" Style="{StaticResource IconButton}" Click="PinClick" ToolTip="始终置顶" AutomationProperties.Name="切换置顶">
+      <Path Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" StrokeThickness="1.25" StrokeLineJoin="Round" Width="12" Height="14" Stretch="Uniform" Data="M4,1 L12,1 M6,1 L6,7 L3,10 L13,10 L10,7 L10,1 M8,10 L8,16" />
+     </Button>
+     <Button Style="{StaticResource IconButton}" Click="MenuClick" ToolTip="组件设置" AutomationProperties.Name="组件设置"><Path Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" Data="M2,0 A1.2,1.2 0 1 0 2,2.4 A1.2,1.2 0 1 0 2,0 M7,0 A1.2,1.2 0 1 0 7,2.4 A1.2,1.2 0 1 0 7,0 M12,0 A1.2,1.2 0 1 0 12,2.4 A1.2,1.2 0 1 0 12,0" /></Button>
+    </StackPanel>
+   </Grid>
+   <Border Height="1" Background="#EFEFEF" Margin="0,12,0,16" />
+   <ComboBox x:Name="BucketPicker" Visibility="Collapsed" Margin="0,0,0,15" FontSize="11" BorderBrush="#E5E5E5" Background="White" SelectionChanged="BucketChanged" AutomationProperties.Name="选择额度分组" />
+   <Grid x:Name="QuotaContent">
+   <StackPanel x:Name="PanelView">
+    <Grid>
+     <TextBlock x:Name="HeroLabel" Text="当前额度" FontSize="12" VerticalAlignment="Center" />
+     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+      <TextBlock x:Name="PercentText" Text="—" FontSize="19" FontWeight="Medium" FontFamily="{StaticResource WidgetFont}" Typography.NumeralAlignment="Tabular" />
+      <TextBlock x:Name="PercentSign" Text="%" FontSize="12" VerticalAlignment="Center" Margin="1,1,0,0" />
+      <TextBlock Text=" 剩余" FontSize="10" Foreground="#858585" VerticalAlignment="Center" Margin="3,1,0,0" />
+     </StackPanel>
+    </Grid>
+    <local:QuotaBar x:Name="Gauge" Height="6" Margin="0,9,0,12" />
+    <Grid x:Name="CountdownCard">
+     <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+     <TextBlock x:Name="ResetText" Text="等待重置时间" FontSize="10" Foreground="#969696" VerticalAlignment="Center" />
+     <local:RollingText x:Name="CountdownText" Grid.Column="1" Text="--:--:--" FontFamily="{StaticResource WidgetFont}" FontSize="11" Foreground="#707070" VerticalAlignment="Center" ToolTip="距离额度重置的剩余时间" />
+    </Grid>
+    <StackPanel x:Name="SecondaryCard" Margin="0,22,0,0" Visibility="Collapsed">
+     <Grid>
+      <TextBlock x:Name="SecondaryLabel" Text="每周额度" FontSize="12" VerticalAlignment="Center" />
+      <StackPanel Orientation="Horizontal" HorizontalAlignment="Right"><TextBlock x:Name="SecondaryPercent" FontSize="19" FontWeight="Medium" /><TextBlock Text=" 剩余" FontSize="10" Foreground="#858585" VerticalAlignment="Center" Margin="3,1,0,0" /></StackPanel>
+     </Grid>
+     <local:QuotaBar x:Name="SecondaryBar" Height="6" Margin="0,9,0,12" />
+     <TextBlock x:Name="SecondaryCountdown" Text="等待同步" FontFamily="{StaticResource WidgetFont}" FontSize="10" Foreground="#969696" />
+    </StackPanel>
+   </StackPanel>
+   <Grid x:Name="StripView" Visibility="Collapsed">
+    <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition x:Name="StripDividerColumn" Width="37" /><ColumnDefinition x:Name="StripSecondColumn" Width="*" /></Grid.ColumnDefinitions>
+    <StackPanel>
+     <Grid><TextBlock Text="{Binding Text, ElementName=HeroLabel}" FontSize="12" VerticalAlignment="Center" /><StackPanel HorizontalAlignment="Right" Orientation="Horizontal"><TextBlock Text="{Binding Text, ElementName=PercentText}" FontSize="19" FontWeight="Medium" /><TextBlock Text="%" FontSize="12" VerticalAlignment="Center" Visibility="{Binding Visibility, ElementName=PercentSign}" /><TextBlock Text=" 剩余" Foreground="#858585" FontSize="10" VerticalAlignment="Center" /></StackPanel></Grid>
+     <local:QuotaBar x:Name="StripPrimaryBar" Value="{Binding Value, ElementName=Gauge}" Height="6" Margin="0,9,0,12" />
+     <Grid><TextBlock Text="{Binding Text, ElementName=ResetText}" FontSize="10" Foreground="#969696" /><local:RollingText x:Name="StripCountdown" Text="{Binding Text, ElementName=CountdownText}" HorizontalAlignment="Right" FontSize="10" FontFamily="{StaticResource WidgetFont}" Foreground="#707070" /></Grid>
+    </StackPanel>
+    <Border x:Name="StripDivider" Grid.Column="1" Width="1" Background="#EFEFEF" />
+    <StackPanel x:Name="StripSecondary" Grid.Column="2">
+     <Grid><TextBlock Text="{Binding Text, ElementName=SecondaryLabel}" FontSize="12" VerticalAlignment="Center" /><TextBlock Text="{Binding Text, ElementName=SecondaryPercent}" HorizontalAlignment="Right" FontSize="19" FontWeight="Medium" /></Grid>
+     <local:QuotaBar x:Name="StripSecondaryBar" Value="{Binding Value, ElementName=SecondaryBar}" Height="6" Margin="0,9,0,12" />
+     <local:RollingText x:Name="StripWeeklyCountdown" Text="{Binding Text, ElementName=SecondaryCountdown}" FontFamily="{StaticResource WidgetFont}" FontSize="10" Foreground="#969696" />
+    </StackPanel>
+   </Grid>
+   <StackPanel x:Name="ClockView" Visibility="Collapsed">
+    <TextBlock Text="距离额度重置" FontSize="10" Foreground="#969696" Margin="0,1,0,5" />
+    <local:RollingText x:Name="LargeCountdown" Text="{Binding Text, ElementName=CountdownText}" FontSize="34" FontFamily="{StaticResource WidgetFont}" Foreground="#303030" />
+    <TextBlock x:Name="ClockResetLabel" Text="{Binding Text, ElementName=ResetText}" FontSize="10" Foreground="#969696" Margin="0,4,0,22" />
+    <Grid><TextBlock Text="{Binding Text, ElementName=HeroLabel}" FontSize="12" VerticalAlignment="Center" /><StackPanel Orientation="Horizontal" HorizontalAlignment="Right"><TextBlock Text="{Binding Text, ElementName=PercentText}" FontSize="22" FontWeight="Medium" /><TextBlock Text="%" FontSize="13" VerticalAlignment="Center" Visibility="{Binding Visibility, ElementName=PercentSign}" /><TextBlock Text=" 剩余" Foreground="#858585" FontSize="10" VerticalAlignment="Center" /></StackPanel></Grid>
+    <local:QuotaBar x:Name="ClockPrimaryBar" Value="{Binding Value, ElementName=Gauge}" Height="6" Margin="0,9,0,0" />
+    <StackPanel x:Name="ClockSecondary" Margin="0,18,0,0">
+     <Grid><TextBlock Text="{Binding Text, ElementName=SecondaryLabel}" Foreground="#858585" FontSize="11" /><TextBlock Text="{Binding Text, ElementName=SecondaryPercent}" HorizontalAlignment="Right" FontSize="12" FontWeight="Medium" /></Grid>
+     <local:QuotaBar x:Name="ClockSecondaryBar" Value="{Binding Value, ElementName=SecondaryBar}" Height="3" Margin="0,7,0,9" />
+     <local:RollingText x:Name="ClockWeeklyCountdown" Text="{Binding Text, ElementName=SecondaryCountdown}" FontSize="10" FontFamily="{StaticResource WidgetFont}" Foreground="#969696" />
+    </StackPanel>
+   </StackPanel>
+   <StackPanel x:Name="OrbitView" Visibility="Collapsed">
+    <UniformGrid x:Name="OrbitColumns" Columns="2" Margin="-3,0,-3,0">
+     <StackPanel>
+      <Grid Width="120" Height="120" HorizontalAlignment="Center"><local:ArcGauge Value="{Binding Value, ElementName=Gauge}" /><StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center"><TextBlock Text="{Binding Text, ElementName=PercentText}" FontSize="30" FontWeight="Medium" /><TextBlock Text="%" FontSize="13" Foreground="#969696" VerticalAlignment="Center" Visibility="{Binding Visibility, ElementName=PercentSign}" /></StackPanel></Grid>
+      <TextBlock Text="{Binding Text, ElementName=HeroLabel}" FontSize="11" HorizontalAlignment="Center" Margin="0,9,0,6" />
+      <local:RollingText x:Name="OrbitCountdown" Text="{Binding Text, ElementName=CountdownText}" FontSize="10" HorizontalAlignment="Center" FontFamily="{StaticResource WidgetFont}" Foreground="#969696" />
+     </StackPanel>
+     <StackPanel x:Name="OrbitSecondary">
+      <Grid Width="120" Height="120" HorizontalAlignment="Center"><local:ArcGauge Value="{Binding Value, ElementName=SecondaryBar}" /><TextBlock Text="{Binding Text, ElementName=SecondaryPercent}" FontSize="27" FontWeight="Medium" HorizontalAlignment="Center" VerticalAlignment="Center" /></Grid>
+      <TextBlock Text="{Binding Text, ElementName=SecondaryLabel}" FontSize="11" HorizontalAlignment="Center" Margin="0,9,0,6" />
+      <local:RollingText x:Name="OrbitWeeklyCountdown" Text="{Binding Text, ElementName=SecondaryCountdown}" FontSize="9" HorizontalAlignment="Center" FontFamily="{StaticResource WidgetFont}" Foreground="#969696" />
+     </StackPanel>
+    </UniformGrid>
+    <TextBlock x:Name="OrbitResetLabel" Text="{Binding Text, ElementName=ResetText}" HorizontalAlignment="Center" FontSize="10" Foreground="#AAAAAA" Margin="0,17,0,0" />
+   </StackPanel>
+   </Grid>
+   <StackPanel x:Name="EmptyContent" Visibility="Collapsed" Margin="0,7,0,16">
+    <TextBlock x:Name="EmptyTitle" Text="暂时无法同步" FontSize="13" FontWeight="Medium" />
+    <TextBlock x:Name="EmptyHint" Text="请检查网络与 Codex 登录状态。" FontSize="11" Foreground="#8C8C8C" TextWrapping="Wrap" LineHeight="20" Margin="0,8,0,0" />
+   </StackPanel>
+   <Border x:Name="WarningCard" Visibility="Collapsed" Background="#FFF8EF" CornerRadius="6" Padding="9,7" Margin="0,12,0,0"><TextBlock x:Name="WarningText" FontSize="10" Foreground="#937044" TextWrapping="Wrap" /></Border>
+   <Border Height="1" Background="#EFEFEF" Margin="0,17,0,6" />
+   <Grid Height="25">
+    <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+    <StackPanel Orientation="Horizontal" VerticalAlignment="Center"><Ellipse x:Name="LiveDot" Fill="#ED94E7" Width="4" Height="4" Margin="0,0,6,0" /><TextBlock x:Name="StatusLabel" Text="正在连接" FontSize="10" Foreground="#8C8C8C" /></StackPanel>
+    <TextBlock x:Name="UpdatedText" Grid.Column="1" Text="" FontSize="10" Foreground="#AAAAAA" VerticalAlignment="Center" Margin="0,0,7,0" />
+    <Button x:Name="RefreshButton" Grid.Column="2" Style="{StaticResource IconButton}" Width="25" Height="25" Click="RefreshClick" ToolTip="刷新额度 · F5" AutomationProperties.Name="刷新额度"><Path x:Name="RefreshIcon" Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" StrokeThickness="1.25" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Width="12" Height="12" Stretch="Uniform" Data="M12,5 A5,5 0 1 0 12,10 M12,1 L12,5 L8,5" RenderTransformOrigin="0.5,0.5"><Path.RenderTransform><RotateTransform /></Path.RenderTransform></Path></Button>
+   </Grid>
+  </StackPanel>
+ </Border>
+ <Image x:Name="TransitionGhost" IsHitTestVisible="False" Visibility="Collapsed" Stretch="Fill" HorizontalAlignment="Left" VerticalAlignment="Top" RenderTransformOrigin="0.5,0.5"><Image.RenderTransform><TranslateTransform x:Name="GhostTransform" /></Image.RenderTransform></Image>
+ </Grid>
+</Window>
